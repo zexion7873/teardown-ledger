@@ -81,6 +81,11 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   an install keeps two separate stores. A checkout loaded by `--plugin-dir`
   and one linked into a desktop session's mods folder are both `@inline` and
   share one.
+- **An option is kept per plugin id too.** Settings hold it under
+  `pluginConfigs`, keyed by the bare name for a checkout and by
+  `<plugin>@<marketplace>` for an install, so a `row` set for one is unset for
+  the other. `claude plugin configure <plugin>@<marketplace>` shows and sets
+  the install's.
 - **A terminal `claude` in an untrusted folder asks to trust it with "No, exit"
   preselected.** A tmux probe sends Down before Enter. This checkout is not
   trusted; trusting it is the owner's call, so a probe starts in a folder that
