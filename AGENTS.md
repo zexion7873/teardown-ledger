@@ -4,9 +4,8 @@ A Claude Code mod: a plugin of function hooks, one module
 (`plugin/hooks/register.tsx`). No package manager, no dependencies. `README.md`
 says what the mod is for; this file covers what will waste your time.
 
-Unpublished, with no remote, and not installed anywhere: it has only run from
-this checkout in terminal sessions. The desktop surface is covered by the
-tests alone.
+Unpublished, with no remote, and not installed anywhere: it runs from this
+checkout.
 
 ## `plugin/` is what ships
 
@@ -57,7 +56,9 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   when you draw, never at `session.start`.
 - **A store file is named from the plugin id alone**
   (`<plugin>@<marketplace>`), so the same mod loaded from a checkout and from
-  an install keeps two separate stores.
+  an install keeps two separate stores. A checkout loaded by `--plugin-dir`
+  and one linked into a desktop session's mods folder are both `@inline` and
+  share one.
 - **A terminal `claude` in an untrusted folder asks to trust it with "No, exit"
   preselected.** A tmux probe sends Down before Enter. This checkout is not
   trusted; trusting it is the owner's call, so a probe starts in a folder that
