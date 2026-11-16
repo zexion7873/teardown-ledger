@@ -167,7 +167,9 @@ const change = ($: EngineInterface, fn: (list: Entry[]) => Entry[]) => {
   return queue
 }
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
+  const row = (options.row as string).trim() || 'teardown-ledger'
+
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'teardown', description: 'Open the teardown ledger pane' })
     return next(e)
@@ -206,7 +208,8 @@ export const register: Register = on => {
     return ran
   })
 
-  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+  // The engine asks for one row per mod: naming another mod's row is the only way onto it.
+  on('ui.render', { component: 'AbovePrompt', plugin: row }, async ($, e, next) => {
     const below = await next(e)
     await read($, tick)
     const list = await load($)
@@ -214,18 +217,16 @@ export const register: Register = on => {
 
     const { Box, Button } = $.ui.resolve(e)
     return (
-      <Box flexDirection="column">
+      <Box flexDirection="row" gap={2}>
         {below}
-        <Box>
-          <Button
-            key="teardown"
-            plain
-            label={`🧹 Teardown ${list.length}`}
-            onPress={() => {
-              void $.ui.open({ id: PANE, title: TITLE })
-            }}
-          />
-        </Box>
+        <Button
+          key="teardown"
+          plain
+          label={`🧹 Teardown ${list.length}`}
+          onPress={() => {
+            void $.ui.open({ id: PANE, title: TITLE })
+          }}
+        />
       </Box>
     )
   })

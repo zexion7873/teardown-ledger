@@ -47,6 +47,14 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   gets the fresh value; nothing prompts the read.
 - **Tool calls of one turn run side by side.** Each rewrites the whole list, so
   writes go through one queue.
+- **Which of two mods on one band row is the outer hook is set by how they
+  load**, not by either mod. On another mod's row the count arrives as that
+  mod's `below` when it is the inner one, and is laid out as that mod lays
+  `below` out.
+- **The test harness cannot put another mod above this one.** Its own hooks
+  draw as a mod named `test`, always beneath, and a bare `key` in `find`
+  addresses the mounted mod's elements only. What a shared row looks like with
+  the other mod outside is seen in a real session.
 
 ## Traps that cost time in the sibling mods
 

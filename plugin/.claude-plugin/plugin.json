@@ -5,5 +5,13 @@
   "types": "./types/index.d.ts",
   "author": {
     "name": "Kevin Lin"
+  },
+  "userConfig": {
+    "row": {
+      "type": "string",
+      "title": "Band row",
+      "description": "The name of another mod whose row above the prompt the count joins, so the two take one row. Empty gives the count a row of its own. While that mod is not loaded, the count is not drawn.",
+      "default": ""
+    }
   }
 }

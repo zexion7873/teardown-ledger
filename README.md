@@ -54,6 +54,17 @@ their output: not after `&&` or `||`, not piped, not redirected (`2>/dev/null`
 and `2>&1` aside), and not on a call that never reached the shell. An
 `|| echo gone` after one is fine; the check ran first.
 
+## Options
+
+- `row`: the name of another mod whose row above the prompt the count joins,
+  so the two take one row. Empty, the default, gives the count a row of its
+  own. While that mod is not loaded, the count is not drawn.
+
+  The count is drawn inside that mod's row. It sits beside that mod's own
+  content when teardown-ledger is the outer of the two hooks, or when that mod
+  lays out what it is handed in a row; a mod that stacks it shows the count on
+  the line above its own.
+
 ## Limits
 
 It is a reminder, not a guarantee. Commands are matched by their text, and the
