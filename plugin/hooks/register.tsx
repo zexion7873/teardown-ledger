@@ -223,17 +223,28 @@ export const register: Register = (on, options) => {
     if (e.props.hasSurvey || list.length === 0) return below
 
     const { Box, Button } = $.ui.resolve(e)
+    const count = (
+      <Button
+        key="teardown"
+        plain
+        label={`🧹 Teardown ${list.length}`}
+        onPress={() => {
+          void show($)
+        }}
+      />
+    )
+    // Beside core's own drawing in a row, the desktop app draws a button at the band's right edge.
+    if (below.type === 'engine')
+      return (
+        <Box flexDirection="column">
+          {below}
+          <Box>{count}</Box>
+        </Box>
+      )
     return (
       <Box flexDirection="row" gap={2}>
         {below}
-        <Button
-          key="teardown"
-          plain
-          label={`🧹 Teardown ${list.length}`}
-          onPress={() => {
-            void show($)
-          }}
-        />
+        {count}
       </Box>
     )
   })

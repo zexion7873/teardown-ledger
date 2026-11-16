@@ -55,6 +55,13 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   load**, not by either mod. On another mod's row the count arrives as that
   mod's `below` when it is the inner one, and is laid out as that mod lays
   `below` out.
+- **Core's own drawing takes no cell on a terminal, so no terminal run shows
+  what it does to a row.** `next(e)` answers `{ type: 'engine' }` when no mod
+  beneath drew. In a row with a button, handoff-ledger 0.2.4 had its button at
+  the right edge of the desktop app's band; that the engine element takes the
+  row's width there is read from that mod's screenshots, not inspected. The
+  count goes in a Box of its own under it, and in a row only beside another
+  mod's content.
 - **The test harness cannot put another mod above this one.** Its own hooks
   draw as a mod named `test`, always beneath, and a bare `key` in `find`
   addresses the mounted mod's elements only. What a shared row looks like with

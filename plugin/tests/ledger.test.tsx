@@ -37,7 +37,7 @@ type Bash = { tool: 'Bash'; command: string; run_in_background?: boolean; agentI
 // `$.tool.call` is typed over every MCP tool connected where the mod last loaded; after a desktop session that is too deep for tsc.
 const call = ($: { tool: { call: unknown } }, input: Bash) => ($.tool.call as (input: Bash) => Promise<unknown>)(input)
 
-const engine = (on: On, entries: readonly object[] = [], now = 0) => {
+const engine = (on: On, entries: readonly object[] = [], now = 0, hasBeneath = true) => {
   const runs = new Map<string, Ran>()
   mock.store(on, { entries })
   mock.clock(on, { now })
@@ -61,10 +61,11 @@ const engine = (on: On, entries: readonly object[] = [], now = 0) => {
     if (ran.fail !== undefined) return { result: ran.fail, text: ran.fail, isError: true as const }
     return { result: { stdout: ran.out ?? '', stderr: '', interrupted: false } }
   })
-  on('ui.render', ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
-    return Box({ children: Text({ children: 'beneath' }) })
-  })
+  if (hasBeneath)
+    on('ui.render', ($, e) => {
+      const { Box, Text } = $.ui.resolve(e)
+      return Box({ children: Text({ children: 'beneath' }) })
+    })
   const sh = (command: string, ran: Ran = {}) => {
     runs.set(command, ran)
     return { tool: 'Bash', command } as const
@@ -280,6 +281,16 @@ test('the ledger is the machine’s: another folder’s entry shows with where a
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect((await band.find({ key: 'teardown' }))?.props.label).toBe('🧹 Teardown 1')
   await band.unmount()
+})
+
+test('with only core’s own drawing beneath, the count gets a Box of its own under it and nothing is laid in a row', async ($, on) => {
+  engine(on, [SEEDED[3]], 0, false)
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const band = await $.ui.mount({ ...BAND, surface })
+    expect((await band.findAll({})).map(e => `${e.type} ${e.props.flexDirection ?? ''}`)).toEqual(['Box column', 'engine ', 'Box ', 'Button '])
+    await band.unmount()
+  }
 })
 
 // The harness's own hooks draw as a mod named `test`, whose row is the `beneath` Box.
