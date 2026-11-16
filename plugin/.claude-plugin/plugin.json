@@ -1,0 +1,8 @@
+{
+  "name": "teardown-ledger",
+  "version": "0.1.0",
+  "description": "Keeps the processes, ports and temp folders a session spawned until their absence is shown: a count above the prompt and a pane",
+  "author": {
+    "name": "Kevin Lin"
+  }
+}
