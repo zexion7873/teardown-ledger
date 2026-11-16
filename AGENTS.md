@@ -81,6 +81,11 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   an install keeps two separate stores. A checkout loaded by `--plugin-dir`
   and one linked into a desktop session's mods folder are both `@inline` and
   share one.
+- **An option is kept per plugin id too.** Settings hold it under
+  `pluginConfigs`, keyed by the bare name for a checkout and by
+  `<plugin>@<marketplace>` for an install, so a `row` set for one is unset for
+  the other. `claude plugin configure <plugin>@<marketplace>` shows and sets
+  the install's.
 - **A terminal `claude` in an untrusted folder asks to trust it with "No, exit"
   preselected.** A tmux probe sends Down before Enter. This checkout is not
   trusted; trusting it is the owner's call, so a probe starts in a folder that
@@ -98,6 +103,19 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   `$.tool.call(...)` in a test fails with TS2589. The tests call it through a
   narrow signature for that reason.
 
+## The hero and the social card
+
+`docs/hero.svg` (the README's image) and `docs/social-card.png` (the repo's
+social preview) are drawn by `tools/make-hero.mts` and
+`tools/make-social-card.mts` from `tools/pane.mts`, a hand-drawn copy of the
+pane: the mod's own tree needs the engine. Change a button label or what an
+entry's rows show in `register.tsx` and both are stale; nothing checks either.
+The card also renders `plugin.json`'s description and throws if it stops
+reading `<tagline>: <accent>`. GitHub takes the social preview only through
+Settings → General → Social preview, so a regenerated PNG is not live until
+someone uploads it there. The README's `width=` must match the SVG's own
+`width`. The PNG depends on the machine's rasteriser, so CI checks neither.
+
 ## Commands
 
 ```bash
@@ -106,4 +124,6 @@ claude plugin validate --strict plugin   # the plugin and every engine call it m
 claude plugin test plugin                # plugin/**/*.test.tsx in the engine's harness
 (cd plugin && tsc -p .)                  # only after the mod has loaded once
 claude --plugin-dir plugin               # a session running this checkout
+node tools/make-hero.mts > docs/hero.svg                                  # README hero
+node tools/make-social-card.mts | rsvg-convert -o docs/social-card.png    # social preview
 ```

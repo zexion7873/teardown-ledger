@@ -4,6 +4,8 @@
 
 [![CI: check](https://github.com/zexion7873/teardown-ledger/actions/workflows/check.yml/badge.svg)](https://github.com/zexion7873/teardown-ledger/actions/workflows/check.yml)
 
+<img src="docs/hero.svg" width="760" title="Drawn by hand from sample entries, not a screenshot." alt="A drawing of the mod, not a screenshot. On the left, a session has run three Bash commands: a dev server put in the background on port 5173, a tmux session named probe, and a temp folder made at /tmp/qa-run. Its reply says The page renders. Done. Under it, above the prompt box, a button reads Teardown 3. On the right, a pane titled Teardown ledger lists the same three things: each shows what it is and where it was made, the check that would settle it (lsof on the port, tmux has-session, ls on the folder), a Copy check button and a Dismiss button; the folder is marked 2d ago, and a Dismiss all button sits under the list.">
+
 **Keeps the processes, ports and temp folders a Claude Code session spawned
 until their absence is shown: a count above the prompt and a pane.**
 

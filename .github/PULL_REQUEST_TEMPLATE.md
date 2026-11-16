@@ -21,6 +21,10 @@
       layout. What I saw on each:
 - [ ] I changed what an entry looks like in the store, and loaded entries the
       previous version had stored. What the pane showed:
+- [ ] I changed what the count or the pane shows, and regenerated
+      `docs/hero.svg` and `docs/social-card.png`. (Nothing checks either, and
+      the card is not live until re-uploaded at Settings → General → Social
+      preview.)
 
 > [!IMPORTANT]
 > **Do not bump `plugin/.claude-plugin/plugin.json`.** That one line *is* the

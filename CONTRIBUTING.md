@@ -53,5 +53,6 @@ stale are part of the diff: the README's two tables (what is recorded, what
 settles an entry), its Options, its hook table and its Limits; `AGENTS.md`;
 `SECURITY.md`, when what the mod reads or stores changes; the two descriptions
 in `plugin/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`;
-and the Claude Code version, which the README's Requirements and
-`.github/workflows/check.yml` both name.
+`docs/hero.svg` and `docs/social-card.png`, if you changed what the count or
+the pane shows; and the Claude Code version, which the README's Requirements
+and `.github/workflows/check.yml` both name.
