@@ -98,6 +98,19 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   `$.tool.call(...)` in a test fails with TS2589. The tests call it through a
   narrow signature for that reason.
 
+## The hero and the social card
+
+`docs/hero.svg` (the README's image) and `docs/social-card.png` (the repo's
+social preview) are drawn by `tools/make-hero.mts` and
+`tools/make-social-card.mts` from `tools/pane.mts`, a hand-drawn copy of the
+pane: the mod's own tree needs the engine. Change a button label or what an
+entry's rows show in `register.tsx` and both are stale; nothing checks either.
+The card also renders `plugin.json`'s description and throws if it stops
+reading `<tagline>: <accent>`. GitHub takes the social preview only through
+Settings → General → Social preview, so a regenerated PNG is not live until
+someone uploads it there. The README's `width=` must match the SVG's own
+`width`. The PNG depends on the machine's rasteriser, so CI checks neither.
+
 ## Commands
 
 ```bash
@@ -106,4 +119,6 @@ claude plugin validate --strict plugin   # the plugin and every engine call it m
 claude plugin test plugin                # plugin/**/*.test.tsx in the engine's harness
 (cd plugin && tsc -p .)                  # only after the mod has loaded once
 claude --plugin-dir plugin               # a session running this checkout
+node tools/make-hero.mts > docs/hero.svg                                  # README hero
+node tools/make-social-card.mts | rsvg-convert -o docs/social-card.png    # social preview
 ```
