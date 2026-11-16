@@ -103,6 +103,17 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   `$.tool.call(...)` in a test fails with TS2589. The tests call it through a
   narrow signature for that reason.
 
+## The icon
+
+`plugin/.claude-plugin/icon.png` is the listing icon for the plugin directory,
+drawn by `tools/make-icon.mts` and rasterised by `rsvg-convert`. It is the one
+image in the shipped tree, and nothing in the tree names it:
+`claude plugin validate --strict plugin` finds it by path. The directory takes
+the icon only from the first save or submission in the developer portal, so
+regenerating it after that changes the file and not the listing. Nothing an
+install from this repository's own marketplace draws is known to use it. It is
+not checked in CI: the PNG depends on the machine's rasteriser.
+
 ## The hero and the social card
 
 `docs/hero.svg` (the README's image) and `docs/social-card.png` (the repo's
@@ -124,6 +135,7 @@ claude plugin validate --strict plugin   # the plugin and every engine call it m
 claude plugin test plugin                # plugin/**/*.test.tsx in the engine's harness
 (cd plugin && tsc -p .)                  # only after the mod has loaded once
 claude --plugin-dir plugin               # a session running this checkout
+node tools/make-icon.mts | rsvg-convert -o plugin/.claude-plugin/icon.png # directory listing icon
 node tools/make-hero.mts > docs/hero.svg                                  # README hero
 node tools/make-social-card.mts | rsvg-convert -o docs/social-card.png    # social preview
 ```
