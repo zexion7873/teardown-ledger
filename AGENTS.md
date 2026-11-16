@@ -4,14 +4,17 @@ A Claude Code mod: a plugin of function hooks, one module
 (`plugin/hooks/register.tsx`). No package manager, no dependencies. `README.md`
 says what the mod is for; this file covers what will waste your time.
 
-Unpublished, with no remote, and not installed anywhere: it runs from this
-checkout.
+Public at `zexion7873/teardown-ledger`. That repository is the marketplace an
+install fetches.
 
 ## `plugin/` is what ships
 
 The repo root is the marketplace; `plugin/` is the plugin
 (`source: "./plugin"`). Docs and CI live outside it so they stay out of an
 install.
+
+The version line in `plugin/.claude-plugin/plugin.json` landing on `main` is
+the publish; a tag or a GitHub release publishes nothing.
 
 ## What the mod must keep doing
 

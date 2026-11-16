@@ -1,9 +1,22 @@
-# teardown-ledger
+<div align="center">
 
-**Status: unpublished. It runs from a checkout: `claude --plugin-dir plugin`.**
+# 🧹 teardown-ledger
 
-A Claude Code mod that keeps a ledger of what a session's shell commands
-spawned and have not yet been shown to be gone.
+[![CI: check](https://github.com/zexion7873/teardown-ledger/actions/workflows/check.yml/badge.svg)](https://github.com/zexion7873/teardown-ledger/actions/workflows/check.yml)
+
+**Keeps the processes, ports and temp folders a Claude Code session spawned
+until their absence is shown: a count above the prompt and a pane.**
+
+[![License: MIT](https://img.shields.io/github/license/zexion7873/teardown-ledger?style=flat)](LICENSE)
+[![Surface: desktop | terminal](https://img.shields.io/badge/surface-desktop%20%7C%20terminal-lightgrey?style=flat)](#what-it-reads-and-writes)
+[![Network: none](https://img.shields.io/badge/network-none-brightgreen?style=flat)](#what-it-reads-and-writes)
+
+No model calls. No network requests. No running, blocking or rewriting a
+command. One mod reading the Bash calls the session already made.
+
+</div>
+
+---
 
 An agent that runs a dev server, opens a tmux session or makes a temp folder
 during a check is supposed to tear it down afterwards, and to show that it is
@@ -54,16 +67,51 @@ their output: not after `&&` or `||`, not piped, not redirected (`2>/dev/null`
 and `2>&1` aside), and not on a call that never reached the shell. An
 `|| echo gone` after one is fine; the check ran first.
 
+## Install
+
+Requirements are below. At the prompt of a terminal session:
+
+```
+/plugin install teardown-ledger --marketplace zexion7873/teardown-ledger
+```
+
+From a shell:
+
+```bash
+claude plugin install teardown-ledger --marketplace zexion7873/teardown-ledger
+```
+
+In the desktop app, where `/plugin` does not run: click + next to the prompt
+box, then Plugins, Add marketplace with `zexion7873/teardown-ledger`, then Add
+plugin.
+
 ## Options
 
 - `row`: the name of another mod whose row above the prompt the count joins,
   so the two take one row. Empty, the default, gives the count a row of its
-  own. While that mod is not loaded, the count is not drawn.
+  own. While that mod is not loaded, the count is not drawn. From a shell it
+  can be set at install: `--config row=<that mod's name>`.
 
   The count is drawn inside that mod's row. It sits beside that mod's own
   content when teardown-ledger is the outer of the two hooks, or when that mod
   lays out what it is handed in a row; a mod that stacks it shows the count on
   the line above its own.
+
+## What it reads and writes
+
+| Hook | Reads | Changes |
+| --- | --- | --- |
+| `session.start` | nothing | registers `/teardown` |
+| `command.run` (`/teardown`) | whether the mod's pane is open and shown | opens the pane; one open behind another pane's tab is closed and opened again, which brings it forward |
+| `tool.call` (`Bash`) | the command and, once it has run, its output; the session's working directory | adds what the command left behind to the ledger and removes what its checks showed gone; the call and its result pass through as they were |
+| `ui.render` (`AbovePrompt`, `Pane`) | the ledger, at each draw | draws the count and the pane; the count opens the pane as `/teardown` does; **Dismiss** deletes an entry, **Dismiss all** deletes every entry after a second press, **Copy check** puts an entry's check on the clipboard |
+
+The ledger lives in Claude Code's per-plugin store on your machine, one list
+for every session. An entry holds the text it was recognised by, a pid or port
+when the command showed one, the working directory and the time. For a
+background job that text is its command with leading `VAR=value` assignments
+and redirections removed, so a secret passed as an argument is kept there until
+the entry settles or is dismissed.
 
 ## Limits
 

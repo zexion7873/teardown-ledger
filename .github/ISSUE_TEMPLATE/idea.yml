@@ -1,0 +1,29 @@
+name: Idea
+description: Something teardown-ledger should record, settle or show, or do differently
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is annoying you
+      description: The situation, not the solution. The thing a session left running that the ledger never showed, or the entry that would not go away after you had shown it gone.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you had in mind
+      description: Optional. A rough shape is fine, and so is "no idea, but this bothers me."
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part, if you know
+      options:
+        - What gets recorded
+        - What settles an entry
+        - The count above the prompt
+        - The pane
+        - Sharing a row with another mod
+        - Not sure
