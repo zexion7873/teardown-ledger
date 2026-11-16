@@ -167,6 +167,13 @@ const change = ($: EngineInterface, fn: (list: Entry[]) => Entry[]) => {
   return queue
 }
 
+// Opening an open pane only retitles it: one behind another tab comes forward by being reopened.
+const show = async ($: EngineInterface) => {
+  const pane = (await $.ui.panes()).find(p => p.id === PANE)
+  if (pane?.isShown === false) await $.ui.close({ id: PANE })
+  await $.ui.open({ id: PANE, title: TITLE })
+}
+
 export const register: Register = (on, options) => {
   const row = (options.row as string).trim() || 'teardown-ledger'
 
@@ -176,7 +183,7 @@ export const register: Register = (on, options) => {
   })
 
   on('command.run', { command: 'teardown' }, async $ => {
-    await $.ui.open({ id: PANE, title: TITLE })
+    await show($)
     return { text: 'Teardown ledger opened.' }
   })
 
@@ -224,7 +231,7 @@ export const register: Register = (on, options) => {
           plain
           label={`🧹 Teardown ${list.length}`}
           onPress={() => {
-            void $.ui.open({ id: PANE, title: TITLE })
+            void show($)
           }}
         />
       </Box>

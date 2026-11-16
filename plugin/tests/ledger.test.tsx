@@ -43,7 +43,18 @@ const engine = (on: On, entries: readonly object[] = [], now = 0) => {
   mock.clock(on, { now })
   on('session.cwd', () => ({ value: '/repo' }))
   on('command.register', () => ({ value: { command: 'teardown' } }))
-  on('ui.open', () => ({ value: { isPlaced: true } }))
+  const ui = { calls: [] as string[], isShown: undefined as boolean | undefined }
+  on('ui.open', (_, e) => {
+    ui.calls.push(`open ${e.id}`)
+    return { value: { isPlaced: true } }
+  })
+  on('ui.close', (_, e) => {
+    ui.calls.push(`close ${e.id}`)
+    return { value: undefined }
+  })
+  on('ui.panes', () => ({
+    value: ui.isShown === undefined ? [] : [{ id: 'teardown', title: 'Teardown ledger', isShown: ui.isShown, isFocused: false, isPlaced: true }],
+  }))
   on('tool.call', (_, e) => {
     const ran = runs.get(e.tool === 'Bash' ? e.command : '') ?? {}
     if (ran.deny !== undefined) return { deny: ran.deny }
@@ -54,10 +65,11 @@ const engine = (on: On, entries: readonly object[] = [], now = 0) => {
     const { Box, Text } = $.ui.resolve(e)
     return Box({ children: Text({ children: 'beneath' }) })
   })
-  return (command: string, ran: Ran = {}) => {
+  const sh = (command: string, ran: Ran = {}) => {
     runs.set(command, ran)
     return { tool: 'Bash', command } as const
   }
+  return Object.assign(sh, { ui })
 }
 
 const shown = async (pane: { findAll: (query: object) => Promise<readonly { type: string; text: string }[]> }) =>
@@ -292,6 +304,23 @@ test('the row option puts the count on the named mod’s row, beside what is the
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect(await band.find({ key: 'teardown' })).toBeUndefined()
   expect((await band.findAll({ type: 'Text' })).map(t => t.text)).toEqual(['beneath'])
+  await band.unmount()
+})
+
+test('the count brings its pane forward: one open behind another tab is closed and opened again, any other is only opened', async ($, on) => {
+  const { ui } = engine(on, [SEEDED[3]])
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+
+  await band.press({ key: 'teardown' })
+  expect(ui.calls).toEqual(['open teardown'])
+
+  ui.isShown = true
+  await band.press({ key: 'teardown' })
+  expect(ui.calls).toEqual(['open teardown', 'open teardown'])
+
+  ui.isShown = false
+  await band.press({ key: 'teardown' })
+  expect(ui.calls).toEqual(['open teardown', 'open teardown', 'close teardown', 'open teardown'])
   await band.unmount()
 })
 
