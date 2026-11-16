@@ -70,6 +70,11 @@ Pinned by `plugin/tests/ledger.test.tsx`.
 - **`tsc` fails on a fresh clone.** `plugin/tsconfig.json` extends
   `plugin/.claude-plugin/types/`, which the engine writes the first time the
   mod loads and git ignores.
+- **`tsc` judges against wherever the mod last loaded.** Each load rewrites
+  those types with the MCP tools connected then, and `$.tool.call` is typed
+  over all of them: after a desktop session with many connectors a plain
+  `$.tool.call(...)` in a test fails with TS2589. The tests call it through a
+  narrow signature for that reason.
 
 ## Commands
 
