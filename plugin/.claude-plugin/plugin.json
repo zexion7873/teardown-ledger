@@ -2,7 +2,16 @@
   "name": "teardown-ledger",
   "version": "0.1.0",
   "description": "Keeps the processes, ports and temp folders a session spawned until their absence is shown: a count above the prompt and a pane",
+  "types": "./types/index.d.ts",
   "author": {
     "name": "Kevin Lin"
+  },
+  "userConfig": {
+    "row": {
+      "type": "string",
+      "title": "Band row",
+      "description": "The name of another mod whose row above the prompt the count joins, so the two take one row. Empty gives the count a row of its own. While that mod is not loaded, the count is not drawn.",
+      "default": ""
+    }
   }
 }
