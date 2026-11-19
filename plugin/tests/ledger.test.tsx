@@ -42,6 +42,9 @@ const engine = (on: On, entries: readonly object[] = [], now = 0, hasBeneath = t
   mock.store(on, { entries })
   mock.clock(on, { now })
   on('session.cwd', () => ({ value: '/repo' }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  const gone = new Set<string>()
+  on('fs.exists', (_, e) => ({ value: !gone.has(e.path) }))
   on('command.register', () => ({ value: { command: 'teardown' } }))
   const ui = { calls: [] as string[], isShown: undefined as boolean | undefined }
   on('ui.open', (_, e) => {
@@ -70,7 +73,7 @@ const engine = (on: On, entries: readonly object[] = [], now = 0, hasBeneath = t
     runs.set(command, ran)
     return { tool: 'Bash', command } as const
   }
-  return Object.assign(sh, { ui })
+  return Object.assign(sh, { ui, gone })
 }
 
 const shown = async (pane: { findAll: (query: object) => Promise<readonly { type: string; text: string }[]> }) =>
@@ -229,6 +232,32 @@ test('a background command is named by its first part that runs something, not b
   const pane = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await shown(pane)).toEqual(['python3 runner.py last', 'process · /repo', "pgrep -f 'python3 runner\\.py last'"])
   await pane.unmount()
+})
+
+test('a temp folder that is no longer there settles itself, at the next Bash call or session start; one still there and a process stay', async ($, on) => {
+  const sh = engine(on, [
+    { id: 'a', at: 0, cwd: '/repo', kind: 'dir', handle: '/tmp/qa-run' },
+    { id: 'b', at: 0, cwd: '/repo', kind: 'dir', handle: '/tmp/qa-keep' },
+    { id: 'c', at: 0, cwd: '/repo', kind: 'process', handle: 'npm run watch' },
+  ])
+  const handles = async () => {
+    const pane = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    const texts = (await shown(pane)).filter((_, i) => i % 3 === 0)
+    await pane.unmount()
+    return texts
+  }
+
+  sh.gone.add('/tmp/qa-run')
+  await call($, sh('echo hi', { out: 'hi' }))
+  expect(await handles()).toEqual(['/tmp/qa-keep', 'npm run watch'])
+
+  sh.gone.add('/tmp/probe.a1B2c3')
+  await call($, sh('d=$(mktemp -d /tmp/probe.XXXXXX); echo "$d"; rm -r "$d"', { out: '/tmp/probe.a1B2c3' }))
+  expect(await handles()).toEqual(['/tmp/qa-keep', 'npm run watch'])
+
+  sh.gone.add('/tmp/qa-keep')
+  await $.session.start({ cwd: '/repo', surface: 'desktop', isInteractive: true })
+  expect(await handles()).toEqual(['npm run watch'])
 })
 
 test('a spawn is kept when a later part of its command failed, once however often it is seen, and marked when a subagent made it', async ($, on) => {

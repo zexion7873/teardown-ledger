@@ -22,10 +22,15 @@ Pinned by `plugin/tests/ledger.test.tsx`.
 
 - **With nothing unsettled, the band is only what is beneath.** A band hook
   awaits `next(e)` and returns it; dropping it erases every other mod's band.
-- **Only a check's own output settles an entry.** Never the `kill` or `rm`,
-  and never silence from a check that may not have run. Settling something
-  still alive is the one error the mod exists to prevent; an entry that sticks
-  has Dismiss.
+- **Only absence the mod has seen settles an entry**: a check's own output, or,
+  for a temp folder, `$.fs.exists` answering that it is not there. Never the
+  `kill` or `rm`, and never silence from a check that may not have run.
+  Settling something still alive is the one error the mod exists to prevent; an
+  entry that sticks has Dismiss.
+- **A temp folder is looked for at each Bash call and each session start.** The
+  owner chose this over receipts only, under which a folder removed without an
+  `ls` stayed on the count for days. A process gets no such look: the engine
+  has no read for one, and a pattern match would be the mod running the check.
 - **Recording leans towards missing a spawn.** A false entry teaches the reader
   to ignore the count. The owner chose this over matching anything that
   mentions a port or a temp path. A heredoc's body is masked before the command
@@ -38,7 +43,8 @@ Pinned by `plugin/tests/ledger.test.tsx`.
 - **An entry can be dismissed by hand**: one at a time, or all with a second
   press.
 - **The mod only keeps the ledger.** It never runs, blocks or rewrites a
-  command, the checks included, though the engine would let it.
+  command, the checks included, though the engine would let it. Looking for a
+  temp folder is a read, not a command.
 
 ## What the engine does not tell a hook
 
