@@ -33,6 +33,9 @@ module run inside Claude Code's own engine.
 - A secret passed as an argument to a background job stays in that text, on
   disk and in the pane, until the entry settles or is dismissed.
 - It puts an entry's check command on the clipboard when you press Copy check.
+- It asks the engine whether each temp folder on its list still exists, at each
+  Bash call and each session start, and drops the ones that do not. It reads no
+  file's contents and asks about no other path.
 - It never runs a command, never blocks or rewrites one, and returns every
   tool call's result as it received it.
 - It makes no model calls and no network requests, and holds no credentials.

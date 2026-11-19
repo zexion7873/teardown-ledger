@@ -24,7 +24,11 @@ const LSOF = /^(?:-[nPt]+|-[nPt]*i(?:(?:tcp|udp)?:\d+)?|(?:tcp|udp)?:\d+|-stcp:l
 const tick = atom({ plugin: 'teardown-ledger', key: 'tick' } as const, 0, { shape: 'tick-1' })
 const armed = atom({ plugin: 'teardown-ledger', key: 'armed' } as const, false, { shape: 'armed-1' })
 
-const mask = (s: string) => s.replace(QUOTED, q => '_'.repeat(q.length))
+// A heredoc's body is its program's input: an `&` in it is Python's or awk's, not a shell job.
+const HEREDOC = /((?<!<)<<-?\s*(['"]?)(\w+)\2.*\n)((?:.*\n)*?)(?=[ \t]*\3[ \t]*(?:\n|$))/g
+
+const mask = (s: string) =>
+  s.replace(HEREDOC, (_all, head: string, _quote, _word, body: string) => head + body.replace(/[^\n]/g, '_')).replace(QUOTED, q => '_'.repeat(q.length))
 
 const split = (command: string): Part[] => {
   const parts: Part[] = []
@@ -78,7 +82,7 @@ const spawned = (command: string, parts: readonly Part[], isBackground: boolean,
   })
 
   if (isBackground) {
-    const part = parts.findIndex(p => !/^(?:cd|export|source|set|\.)\s/.test(p.text))
+    const part = parts.findIndex(p => !/^(?:(?:cd|export|source|set|\.)\s|\w+=\S*$)/.test(p.text))
     const p = parts[part]
     if (p !== undefined) job(p, part)
   }
@@ -167,6 +171,14 @@ const change = ($: EngineInterface, fn: (list: Entry[]) => Entry[]) => {
   return queue
 }
 
+// The mod's one look of its own: a path that is not there needs no command's word for it.
+const sweep = async ($: EngineInterface) => {
+  const dirs = (await load($)).filter(o => o.kind === 'dir')
+  const here = await Promise.all(dirs.map(o => $.fs.exists(o.handle)))
+  const gone = new Set(dirs.filter((_, i) => !here[i]).map(o => o.id))
+  if (gone.size > 0) await change($, list => list.filter(o => !gone.has(o.id)))
+}
+
 // Opening an open pane only retitles it: one behind another tab comes forward by being reopened.
 const show = async ($: EngineInterface) => {
   const pane = (await $.ui.panes()).find(p => p.id === PANE)
@@ -179,6 +191,7 @@ export const register: Register = (on, options) => {
 
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'teardown', description: 'Open the teardown ledger pane' })
+    await sweep($)
     return next(e)
   })
 
@@ -199,19 +212,20 @@ export const register: Register = (on, options) => {
     const isBackground = e.run_in_background === true || (!ran.isError && ran.result.backgroundTaskId !== undefined)
     const drafts = spawned(e.command, parts, isBackground, lines)
     const found = receipts(parts, lines)
-    if (drafts.length === 0 && found.length === 0) return ran
-
-    const at = await $.clock.now()
-    const cwd = await $.session.cwd()
-    const isSame = (a: Thing, b: Thing) => a.kind === b.kind && a.handle === b.handle
-    await change($, list => [
-      ...list.filter(o => !found.some(r => r.clears(o))),
-      ...drafts
-        .filter((d, i) => !list.some(o => isSame(o, d)) && drafts.findIndex(o => isSame(o, d)) === i)
-        // A check clears what the same command made only when it comes after it.
-        .filter(d => !found.some(r => r.part > d.part && r.clears(d)))
-        .map(({ part, ...d }, i) => ({ ...d, id: `${at}-${i}`, at, cwd, ...(e.agentId !== undefined && { isAgent: true as const }) })),
-    ])
+    if (drafts.length > 0 || found.length > 0) {
+      const at = await $.clock.now()
+      const cwd = await $.session.cwd()
+      const isSame = (a: Thing, b: Thing) => a.kind === b.kind && a.handle === b.handle
+      await change($, list => [
+        ...list.filter(o => !found.some(r => r.clears(o))),
+        ...drafts
+          .filter((d, i) => !list.some(o => isSame(o, d)) && drafts.findIndex(o => isSame(o, d)) === i)
+          // A check clears what the same command made only when it comes after it.
+          .filter(d => !found.some(r => r.part > d.part && r.clears(d)))
+          .map(({ part, ...d }, i) => ({ ...d, id: `${at}-${i}`, at, cwd, ...(e.agentId !== undefined && { isAgent: true as const }) })),
+      ])
+    }
+    await sweep($)
     return ran
   })
 

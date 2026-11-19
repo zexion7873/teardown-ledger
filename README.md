@@ -24,7 +24,8 @@ An agent that runs a dev server, opens a tmux session or makes a temp folder
 during a check is supposed to tear it down afterwards, and to show that it is
 gone rather than say that it killed it. teardown-ledger watches the Bash tool
 calls of a session and its subagents, records what they leave behind, and
-clears an entry only when a later command's own output shows its absence:
+clears an entry only on absence it has seen, in a later command's own output
+or, for a temp folder, by looking for the folder itself:
 
 - a count above the prompt while something is unsettled
 - a pane (`/teardown`) listing each unsettled thing, where it was made and the
@@ -42,7 +43,7 @@ network requests.
 | A command that | is kept as |
 | --- | --- |
 | puts a job in the background with `&`, unless it also `wait`s | a process, named by that job's text |
-| runs as a background task | a process, named by its first part that is not `cd`, `export`, `source` or `set` |
+| runs as a background task | a process, named by its first part that is not `cd`, `export`, `source`, `set` or a bare `VAR=value` |
 | runs `tmux new-session -s NAME` | a tmux session |
 | runs `mkdir` on a literal path under `/tmp` or `/private/tmp` | a temp folder |
 | runs `mktemp -d` and prints the path it made | a temp folder |
@@ -50,9 +51,15 @@ network requests.
 A process also keeps its pid when the command echoes `$!`, and its port when
 the text names one (`--port N`, `PORT=N`, `localhost:N`, `http.server N`).
 
+A heredoc's body is not read for jobs: the `&` in `python3 - <<'EOF'` is
+Python's. A job that a `sh <<EOF` body starts is missed for the same reason.
+
 ## What settles an entry
 
-Only the output of a check:
+A temp folder settles by itself once it is gone: at each Bash call and at each
+session start the mod looks for every folder on the ledger and drops the ones
+that are not there, whoever removed them. It looks; it runs nothing. Everything
+else settles only by the output of a check:
 
 | Entry | Check | Settles when |
 | --- | --- | --- |
@@ -103,9 +110,9 @@ plugin.
 
 | Hook | Reads | Changes |
 | --- | --- | --- |
-| `session.start` | nothing | registers `/teardown` |
+| `session.start` | whether each temp folder on the ledger still exists | registers `/teardown`; removes the folders that are gone |
 | `command.run` (`/teardown`) | whether the mod's pane is open and shown | opens the pane; one open behind another pane's tab is closed and opened again, which brings it forward |
-| `tool.call` (`Bash`) | the command and, once it has run, its output; the session's working directory | adds what the command left behind to the ledger and removes what its checks showed gone; the call and its result pass through as they were |
+| `tool.call` (`Bash`) | the command and, once it has run, its output; the session's working directory; whether each temp folder on the ledger still exists | adds what the command left behind to the ledger and removes what its checks showed gone and the folders that are gone; the call and its result pass through as they were |
 | `ui.render` (`AbovePrompt`, `Pane`) | the ledger, at each draw | draws the count and the pane; the count opens the pane as `/teardown` does; **Dismiss** deletes an entry, **Dismiss all** deletes every entry after a second press, **Copy check** puts an entry's check on the clipboard |
 
 The ledger lives in Claude Code's per-plugin store on your machine, one list
@@ -124,6 +131,8 @@ so an empty ledger does not prove a clean machine.
 - Not recorded: a server started inside a tmux pane with `send-keys`, the
   app's own preview server, a daemon that forks by itself, a command typed into
   a terminal by hand, a `mktemp -d` whose path is never printed.
+- A temp folder removed outside a session (by hand, by a reboot's cleanup)
+  leaves the count at the next Bash call or session start, not at once.
 - A background command that ends by itself stays until a check or a Dismiss
   clears it. A background task reported as completed is not a receipt: the
   shell of `server & echo $!` completes while the server lives.
