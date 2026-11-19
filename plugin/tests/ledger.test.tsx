@@ -207,6 +207,30 @@ test('a command that mentions a temp path, quotes an ampersand, waits for its jo
   await band.unmount()
 })
 
+test('an ampersand in a heredoc’s body starts no job; one after the heredoc does', async ($, on) => {
+  const sh = engine(on)
+  await call($, sh("python3 - <<'EOF'\ncommon = set(a) & set(b)\nprint(len(common))\nEOF"))
+  await call($, sh('cd /repo && python3 -I - "$T/x" <<EOF\n    hit=sorted(seen & wip)\nEOF'))
+
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect(await band.find({ key: 'teardown' })).toBeUndefined()
+  await band.unmount()
+
+  await call($, sh("cat > notes.txt <<-'END'\n\ta & b\n\tEND\nnode server.js &"))
+  const pane = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shown(pane)).toEqual(['node server.js', 'process · /repo', "pgrep -f 'node server\\.js'"])
+  await pane.unmount()
+})
+
+test('a background command is named by its first part that runs something, not by a variable it sets', async ($, on) => {
+  const sh = engine(on)
+  await call($, { ...sh('T=/tmp/work; cd $T && python3 runner.py last'), run_in_background: true })
+
+  const pane = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shown(pane)).toEqual(['python3 runner.py last', 'process · /repo', "pgrep -f 'python3 runner\\.py last'"])
+  await pane.unmount()
+})
+
 test('a spawn is kept when a later part of its command failed, once however often it is seen, and marked when a subagent made it', async ($, on) => {
   const sh = engine(on)
   await call($, sh('npm run dev & sleep 2; curl -sf localhost:5173', { fail: 'Exit code 7' }))

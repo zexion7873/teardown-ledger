@@ -24,7 +24,11 @@ const LSOF = /^(?:-[nPt]+|-[nPt]*i(?:(?:tcp|udp)?:\d+)?|(?:tcp|udp)?:\d+|-stcp:l
 const tick = atom({ plugin: 'teardown-ledger', key: 'tick' } as const, 0, { shape: 'tick-1' })
 const armed = atom({ plugin: 'teardown-ledger', key: 'armed' } as const, false, { shape: 'armed-1' })
 
-const mask = (s: string) => s.replace(QUOTED, q => '_'.repeat(q.length))
+// A heredoc's body is its program's input: an `&` in it is Python's or awk's, not a shell job.
+const HEREDOC = /((?<!<)<<-?\s*(['"]?)(\w+)\2.*\n)((?:.*\n)*?)(?=[ \t]*\3[ \t]*(?:\n|$))/g
+
+const mask = (s: string) =>
+  s.replace(HEREDOC, (_all, head: string, _quote, _word, body: string) => head + body.replace(/[^\n]/g, '_')).replace(QUOTED, q => '_'.repeat(q.length))
 
 const split = (command: string): Part[] => {
   const parts: Part[] = []
@@ -78,7 +82,7 @@ const spawned = (command: string, parts: readonly Part[], isBackground: boolean,
   })
 
   if (isBackground) {
-    const part = parts.findIndex(p => !/^(?:cd|export|source|set|\.)\s/.test(p.text))
+    const part = parts.findIndex(p => !/^(?:(?:cd|export|source|set|\.)\s|\w+=\S*$)/.test(p.text))
     const p = parts[part]
     if (p !== undefined) job(p, part)
   }

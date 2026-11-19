@@ -42,13 +42,16 @@ network requests.
 | A command that | is kept as |
 | --- | --- |
 | puts a job in the background with `&`, unless it also `wait`s | a process, named by that job's text |
-| runs as a background task | a process, named by its first part that is not `cd`, `export`, `source` or `set` |
+| runs as a background task | a process, named by its first part that is not `cd`, `export`, `source`, `set` or a bare `VAR=value` |
 | runs `tmux new-session -s NAME` | a tmux session |
 | runs `mkdir` on a literal path under `/tmp` or `/private/tmp` | a temp folder |
 | runs `mktemp -d` and prints the path it made | a temp folder |
 
 A process also keeps its pid when the command echoes `$!`, and its port when
 the text names one (`--port N`, `PORT=N`, `localhost:N`, `http.server N`).
+
+A heredoc's body is not read for jobs: the `&` in `python3 - <<'EOF'` is
+Python's. A job that a `sh <<EOF` body starts is missed for the same reason.
 
 ## What settles an entry
 

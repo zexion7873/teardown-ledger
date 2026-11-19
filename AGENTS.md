@@ -28,7 +28,9 @@ Pinned by `plugin/tests/ledger.test.tsx`.
   has Dismiss.
 - **Recording leans towards missing a spawn.** A false entry teaches the reader
   to ignore the count. The owner chose this over matching anything that
-  mentions a port or a temp path.
+  mentions a port or a temp path. A heredoc's body is masked before the command
+  is split for that reason: its `&` is its program's, and without the mask
+  `set(a) & set(b)` in a Python heredoc is recorded as a job.
 - **One ledger for the machine**, under one store key, read at each draw. The
   owner chose this over a ledger per working directory (handoff-ledger's shape)
   and one per session: a process outlives its session and belongs to no repo.
